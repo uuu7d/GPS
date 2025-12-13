@@ -1,30 +1,31 @@
-/* ====== العناوين العامة ====== */
+/* ====== التطبيق ====== */
 "APP_NAME" = "GPS++";
-"GPS_SETTINGS_TITLE" = "إعدادات GPS";
-"GPS_ADVANCED_SETTINGS_TITLE" = "إعدادات GPS المتقدمة";
 "MAP_TITLE" = "الخريطة";
+"GPS_SETTINGS_TITLE" = "إعدادات GPS";
+"GPS_ADVANCED_SETTINGS_TITLE" = "الإعدادات المتقدمة";
 
-/* ====== الأزرار ====== */
+/* ====== أزرار عامة ====== */
 "CONFIRM" = "تأكيد";
 "CANCEL" = "إلغاء";
 "SAVE" = "حفظ";
 "CLOSE" = "إغلاق";
-"RESET" = "إعادة تعيين";
-"APPLY" = "تطبيق";
 "BACK" = "رجوع";
+"APPLY" = "تطبيق";
+"RESET" = "إعادة تعيين";
 
-/* ====== الحالة العامة ====== */
+/* ====== الحالة ====== */
 "ENABLED" = "مفعل";
 "DISABLED" = "معطل";
 "ON" = "تشغيل";
 "OFF" = "إيقاف";
 
-/* ====== انتحال الموقع ====== */
-"ENABLE_LOCATION_SPOOFING" = "تفعيل انتحال الموقع";
-"DISABLE_LOCATION_SPOOFING" = "إيقاف انتحال الموقع";
-"LOCATION_SPOOFING_STATUS" = "حالة انتحال الموقع";
-"LOCATION_UPDATED" = "تم تحديث الموقع بنجاح";
+/* ====== الموقع ====== */
+"SET_LOCATION" = "تحديد الموقع";
+"LOCATION_UPDATED" = "تم تحديث الموقع";
 "LOCATION_RESET" = "تمت إعادة تعيين الموقع";
+"CURRENT_LOCATION" = "الموقع الحالي";
+"FAKE_LOCATION_ACTIVE" = "الموقع الوهمي نشط";
+"FAKE_LOCATION_INACTIVE" = "الموقع الوهمي غير نشط";
 
 /* ====== الإحداثيات ====== */
 "LATITUDE" = "خط العرض";
@@ -32,61 +33,48 @@
 "ALTITUDE" = "الارتفاع";
 "ACCURACY" = "الدقة";
 "SPEED" = "السرعة";
-"COURSE" = "الاتجاه";
+"COURSE" = "زاوية الاتجاه";
 
-/* ====== وضع الحركة ====== */
+/* ====== الحركة ====== */
 "MOVING_MODE" = "وضع الحركة";
-"ENABLE_MOVING_MODE" = "تفعيل وضع الحركة";
-"DISABLE_MOVING_MODE" = "إيقاف وضع الحركة";
 "MOVING_SPEED" = "سرعة الحركة";
-"MOVING_PATH" = "مسار الحركة";
+"STEP_DISTANCE" = "مسافة الخطوة";
 "AUTO_MOVEMENT_STARTED" = "تم بدء الحركة التلقائية";
 "AUTO_MOVEMENT_STOPPED" = "تم إيقاف الحركة التلقائية";
 "NEED_AT_LEAST_TWO_POINTS" = "يتطلب وضع الحركة نقطتين على الأقل";
 
 /* ====== العشوائية ====== */
 "RANDOMIZE_LOCATION" = "عشوائية الموقع";
-"ENABLE_RANDOMIZE" = "تفعيل العشوائية";
-"DISABLE_RANDOMIZE" = "إيقاف العشوائية";
-"RANDOMIZE_RADIUS" = "نطاق العشوائية";
+"RANDOM_RADIUS" = "نطاق العشوائية";
 
-/* ====== الخطوة التلقائية ====== */
-"AUTO_STEP_MODE" = "التحرك التلقائي";
-"ENABLE_AUTO_STEP" = "تفعيل التحرك التلقائي";
-"DISABLE_AUTO_STEP" = "إيقاف التحرك التلقائي";
-"AUTO_STEP_DISTANCE" = "مسافة التحرك";
+/* ====== المسار ====== */
+"CLEAR_PATH" = "مسح المسار";
+"ADD_POINT" = "إضافة نقطة";
+"REMOVE_POINT" = "حذف النقطة";
 
-/* ====== الإعدادات المتقدمة ====== */
-"ADVANCED_SETTINGS" = "الإعدادات المتقدمة";
-"ALTITUDE_SPOOFING" = "انتحال الارتفاع";
-"ENABLE_ALTITUDE_SPOOFING" = "تفعيل انتحال الارتفاع";
-"DISABLE_ALTITUDE_SPOOFING" = "إيقاف انتحال الارتفاع";
+/* ====== الأقسام ====== */
+"SECTION_MOVEMENT_SETTINGS" = "إعدادات الحركة";
+"SECTION_RANDOM_SETTINGS" = "إعدادات العشوائية";
+"SECTION_ROUTE_SETTINGS" = "إعدادات المسار";
+"SECTION_OTHER_SETTINGS" = "إعدادات أخرى";
+
+/* ====== محرر القيم ====== */
+"EDIT_MOVING_SPEED" = "تحديد سرعة الحركة";
+"EDIT_STEP_DISTANCE" = "تحديد مسافة الخطوة";
+"EDIT_RANDOM_RADIUS" = "تحديد نطاق العشوائية";
+"EDIT_COURSE" = "تحديد زاوية الاتجاه";
+
+/* ====== GPX ====== */
+"IMPORT_GPX" = "استيراد ملف GPX";
+"IMPORT_SUCCESS" = "تم الاستيراد بنجاح";
+"IMPORT_FAILED" = "فشل الاستيراد";
+"IMPORT_SUCCESS_POINTS" = "تم استيراد %lu نقطة مسار";
 
 /* ====== التنبيهات ====== */
 "WARNING" = "تنبيه";
 "ERROR" = "خطأ";
 "SUCCESS" = "تم بنجاح";
+"UNKNOWN_ERROR" = "خطأ غير معروف";
 
-/* ====== رسائل النظام ====== */
+/* ====== النظام ====== */
 "OPEN_SETTINGS_HINT" = "يرجى استخدام تطبيق الإعدادات لفتح إعدادات GPS";
-"GPS_INTERFACE_OPENED" = "تم فتح واجهة GPS";
-"GPS_INTERFACE_FAILED" = "تعذر فتح واجهة GPS";
-
-/* ====== الإيماءات ====== */
-"GESTURE_DETECTED" = "تم اكتشاف الإيماءة";
-"DOUBLE_TAP_HINT" = "اضغط بإصبعين لفتح إعدادات GPS";
-
-/* ====== السجل (اختياري للعرض) ====== */
-"CURRENT_LOCATION" = "الموقع الحالي";
-"FAKE_LOCATION_ACTIVE" = "الموقع الوهمي نشط";
-"FAKE_LOCATION_INACTIVE" = "الموقع الوهمي غير نشط";
-
-/* ====== أزرار الخريطة ====== */
-"SET_LOCATION" = "تحديد الموقع";
-"CLEAR_PATH" = "مسح المسار";
-"ADD_POINT" = "إضافة نقطة";
-"REMOVE_POINT" = "حذف النقطة";
-
-/* ====== تأكيدات ====== */
-"CONFIRM_RESET_LOCATION" = "هل أنت متأكد من إعادة تعيين الموقع؟";
-"CONFIRM_CLEAR_PATH" = "هل تريد مسح مسار الحركة بالكامل؟";
