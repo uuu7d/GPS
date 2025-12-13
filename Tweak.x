@@ -1,16 +1,18 @@
 #import <CoreLocation/CoreLocation.h>
 #import <UIKit/UIKit.h>
 #import <MapKit/MapKit.h>
-#import "MapViewController.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <objc/runtime.h>
+
+#import "MapViewController.h"
 #import "GPSAdvancedSettingsViewController.h"
 #import "GPSCoordinateUtils.h"
 #import "GPSLocationModel.h"
 #import "GPSLocationViewModel.h"
 #import "GPSRouteManager.h"
 
-// تعريف مفاتيحه الإعدادات
+#pragma mark - تعريف مفاتيح الإعدادات
+
 #define kUserDefaultsDomain                @"com.gps.locationspoofer"
 #define kLocationSpoofingEnabledKey        @"LocationSpoofingEnabled"
 #define kAltitudeSpoofingEnabledKey        @"AltitudeSpoofingEnabled"
@@ -30,242 +32,193 @@
 #define kAutoStepKey                       @"AutoStepEnabled"
 #define kAutoStepDistanceKey               @"AutoStepDistance"
 
-// إشعارات
+#pragma mark - الإشعارات
+
 NSString *const kLocationSpoofingChangedNotification = @"LocationSpoofingChanged";
 NSString *const kAltitudeSpoofingChangedNotification = @"AltitudeSpoofingChanged";
-NSString *const kMovingModeChangedNotification = @"MovingModeChanged";
-NSString *const kShowGPSSettingsNotification = @"ShowGPSSettings";
+NSString *const kMovingModeChangedNotification      = @"MovingModeChanged";
+NSString *const kShowGPSSettingsNotification        = @"ShowGPSSettings";
 
-// مدير الموقع
+#pragma mark - GPSLocationManager
+
 @interface GPSLocationManager : NSObject
-
 + (instancetype)sharedManager;
-
 @property (nonatomic, assign) BOOL isLocationSpoofingEnabled;
-@property (nonatomic, assign) BOOL isAltitudeSpoofingEnabled;
-@property (nonatomic, assign) BOOL isMovingModeEnabled;
-@property (nonatomic, assign) BOOL isRandomizeEnabled;
-@property (nonatomic, assign) BOOL isAutoStepEnabled;
-
-@property (nonatomic, strong) NSMutableArray<CLLocation *> *movingPath;
-@property (nonatomic, assign) NSUInteger currentPathIndex;
-@property (nonatomic, assign) double movingSpeed;
-@property (nonatomic, assign) double autoStepDistance;
-@property (nonatomic, assign) double randomizeRadius;
-
-@property (nonatomic, strong) CLLocation *cachedFakeLocation;
-@property (nonatomic, strong) NSDate *lastLocationUpdate;
-
-- (void)loadSettings;
-- (void)saveSettings;
-- (CLLocation *)nextFakeLocation;
-- (CLLocation *)createFakeLocationWithLatitude:(double)latitude longitude:(double)longitude altitude:(double)altitude;
-- (CLLocation *)randomLocationAroundCurrentLocation;
-- (NSArray<CLLocation *> *)generatePathFromLocation:(CLLocation *)startLoc toLocation:(CLLocation *)endLoc withSteps:(NSUInteger)steps;
-- (void)startAutomatedMovement;
-- (void)stopAutomatedMovement;
 @end
 
 @implementation GPSLocationManager
 
 + (instancetype)sharedManager {
-    static GPSLocationManager *sharedInstance = nil;
+    static GPSLocationManager *manager;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sharedInstance = [[GPSLocationManager alloc] init];
+        manager = [[self alloc] init];
     });
-    return sharedInstance;
+    return manager;
 }
 
-- (instancetype)init {
-    if (self = [super init]) {
-        [self loadSettings];
-        _movingPath = [NSMutableArray array];
-        _currentPathIndex = 0;
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(handleLocationSpoofingChanged:)
-                                                     name:kLocationSpoofingChangedNotification
-                                                   object:nil];
-    }
-    return self;
-}
-
-- (void)loadSettings {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    _isLocationSpoofingEnabled = [defaults boolForKey:kLocationSpoofingEnabledKey];
-    _isAltitudeSpoofingEnabled = [defaults boolForKey:kAltitudeSpoofingEnabledKey];
-    _isMovingModeEnabled = [defaults boolForKey:kMovingModeEnabledKey];
-    _isRandomizeEnabled = [defaults boolForKey:kRandomizeKey];
-    _isAutoStepEnabled = [defaults boolForKey:kAutoStepKey];
-    
-    _movingSpeed = [defaults doubleForKey:kMovingSpeedKey] ?: 5.0;
-    _autoStepDistance = [defaults doubleForKey:kAutoStepDistanceKey] ?: 10.0;
-    _randomizeRadius = [defaults doubleForKey:kRandomizeRadiusKey] ?: 50.0;
-    
-    NSArray *pathData = [defaults objectForKey:kMovingPathKey];
-    if (pathData && pathData.count > 0) {
-        _movingPath = [NSMutableArray array];
-        for (NSDictionary *locationDict in pathData) {
-            double lat = [locationDict[@"latitude"] doubleValue];
-            double lng = [locationDict[@"longitude"] doubleValue];
-            double alt = [locationDict[@"altitude"] doubleValue];
-            CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(lat, lng)
-                                                               altitude:alt
-                                                     horizontalAccuracy:5.0
-                                                       verticalAccuracy:5.0
-                                                              timestamp:[NSDate date]];
-            [_movingPath addObject:location];
-        }
-    }
-}
-
-- (void)saveSettings {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:_isLocationSpoofingEnabled forKey:kLocationSpoofingEnabledKey];
-    [defaults setBool:_isAltitudeSpoofingEnabled forKey:kAltitudeSpoofingEnabledKey];
-    [defaults setBool:_isMovingModeEnabled forKey:kMovingModeEnabledKey];
-    [defaults setBool:_isRandomizeEnabled forKey:kRandomizeKey];
-    [defaults setBool:_isAutoStepEnabled forKey:kAutoStepKey];
-    
-    [defaults setDouble:_movingSpeed forKey:kMovingSpeedKey];
-    [defaults setDouble:_autoStepDistance forKey:kAutoStepDistanceKey];
-    [defaults setDouble:_randomizeRadius forKey:kRandomizeRadiusKey];
-    
-    if (_movingPath && _movingPath.count > 0) {
-        NSMutableArray *pathData = [NSMutableArray array];
-        for (CLLocation *location in _movingPath) {
-            [pathData addObject:@{
-                @"latitude": @(location.coordinate.latitude),
-                @"longitude": @(location.coordinate.longitude),
-                @"altitude": @(location.altitude)
-            }];
-        }
-        [defaults setObject:pathData forKey:kMovingPathKey];
-    }
-    
-    [defaults synchronize];
-}
-
-// بقية وظائف GPSLocationManager تبقى كما هي مع التركيز على الرسائل بالعربية فقط
 @end
 
-// SpringBoard Hook
+#pragma mark - Hook SpringBoard
+
 %hook SpringBoard
 
 %new
 - (void)showGPSQuickOptions {
-    NSLog(@"[GPS++] عرض خيارات GPS");
-    
+    NSLog(@"[GPS++] تم طلب عرض واجهة إعدادات GPS");
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:kShowGPSSettingsNotification object:nil];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:kShowGPSSettingsNotification
+            object:nil];
     });
 }
 
 %end
 
-// CLLocationManager Hook
+#pragma mark - Hook CLLocationManager
+
 %hook CLLocationManager
 
 %new
 - (void)sendFakeLocationUpdate {
     GPSLocationViewModel *viewModel = [GPSLocationViewModel sharedInstance];
-    if (viewModel.isLocationSpoofingEnabled) {
-        CLLocationCoordinate2D coordinate = viewModel.currentLocation.coordinate;
-        if (CLLocationCoordinate2DIsValid(coordinate)) {
-            double accuracy = viewModel.currentLocation.accuracy > 0 ? viewModel.currentLocation.accuracy : 5.0;
-            double altitude = viewModel.currentLocation.altitude;
-            double speed = viewModel.currentLocation.speed;
-            double course = viewModel.currentLocation.course;
-            NSDate *timestamp = [NSDate date];
-            CLLocation *fakeLocation = [[CLLocation alloc] 
-                                        initWithCoordinate:coordinate
-                                        altitude:altitude
-                                        horizontalAccuracy:accuracy
-                                        verticalAccuracy:accuracy
-                                        course:course
-                                        speed:speed
-                                        timestamp:timestamp];
-            
-            if (self.delegate && [self.delegate respondsToSelector:@selector(locationManager:didUpdateLocations:)]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate locationManager:self didUpdateLocations:@[fakeLocation]];
-                });
-            }
-        }
+    if (!viewModel.isLocationSpoofingEnabled) return;
+
+    CLLocation *current = viewModel.currentLocation;
+    if (!current) return;
+
+    CLLocation *fakeLocation =
+    [[CLLocation alloc] initWithCoordinate:current.coordinate
+                                   altitude:current.altitude
+                         horizontalAccuracy:current.accuracy ?: 5.0
+                           verticalAccuracy:current.accuracy ?: 5.0
+                                     course:current.course
+                                      speed:current.speed
+                                  timestamp:[NSDate date]];
+
+    if (self.delegate &&
+        [self.delegate respondsToSelector:@selector(locationManager:didUpdateLocations:)]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate locationManager:self didUpdateLocations:@[fakeLocation]];
+        });
     }
 }
 
 %end
 
-// GPSTriggerManager
+#pragma mark - GPSTriggerManager (مصحح بالكامل)
+
+@interface GPSTriggerManager : NSObject
+@end
+
 @implementation GPSTriggerManager
+
+#pragma mark أداة تحديد أعلى ViewController (كانت سبب الخطأ)
+
+- (UIViewController *)topViewControllerWithRootViewController:(UIViewController *)rootViewController {
+    if (rootViewController.presentedViewController) {
+        return [self topViewControllerWithRootViewController:rootViewController.presentedViewController];
+    }
+    if ([rootViewController isKindOfClass:[UINavigationController class]]) {
+        UINavigationController *nav = (UINavigationController *)rootViewController;
+        return [self topViewControllerWithRootViewController:nav.topViewController];
+    }
+    if ([rootViewController isKindOfClass:[UITabBarController class]]) {
+        UITabBarController *tab = (UITabBarController *)rootViewController;
+        return [self topViewControllerWithRootViewController:tab.selectedViewController];
+    }
+    return rootViewController;
+}
+
+#pragma mark عرض واجهة GPS
 
 - (void)showGPSInterface {
     dispatch_async(dispatch_get_main_queue(), ^{
+
         MapViewController *mapVC = [[MapViewController alloc] init];
-        // فرض RTL
-        if (@available(iOS 9.0, *)) {
-            mapVC.view.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-        }
-        
-        UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:mapVC];
-        UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
-        UIViewController *rootVC = keyWindow.rootViewController;
-        UIViewController *topVC = [self topViewControllerWithRootViewController:rootVC];
-        
+
+        // فرض العربية و RTL
+        mapVC.view.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
+
+        UINavigationController *nav =
+        [[UINavigationController alloc] initWithRootViewController:mapVC];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+
+        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        UIViewController *rootVC = window.rootViewController;
+        UIViewController *topVC  = [self topViewControllerWithRootViewController:rootVC];
+
         if (topVC) {
-            navController.modalPresentationStyle = UIModalPresentationFullScreen;
-            [topVC presentViewController:navController animated:YES completion:nil];
+            [topVC presentViewController:nav animated:YES completion:nil];
         }
     });
 }
 
+#pragma mark Toast عربي
+
 - (void)showToastWithMessage:(NSString *)message {
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    UIView *toastView = [[UIView alloc] init];
-    toastView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.7];
-    toastView.layer.cornerRadius = 10;
-    toastView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+    if (!window) return;
+
+    UIView *toast = [[UIView alloc] init];
+    toast.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.75];
+    toast.layer.cornerRadius = 10;
+    toast.translatesAutoresizingMaskIntoConstraints = NO;
+
     UILabel *label = [[UILabel alloc] init];
-    label.text = message;  // يجب تمرير رسالة عربية فقط
-    label.textColor = [UIColor whiteColor];
+    label.text = message;
+    label.textColor = UIColor.whiteColor;
     label.textAlignment = NSTextAlignmentRight;
     label.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
     label.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    [toastView addSubview:label];
-    [window addSubview:toastView];
-    
+
+    [toast addSubview:label];
+    [window addSubview:toast];
+
     [NSLayoutConstraint activateConstraints:@[
-        [label.leadingAnchor constraintEqualToAnchor:toastView.leadingAnchor constant:15],
-        [label.trailingAnchor constraintEqualToAnchor:toastView.trailingAnchor constant:-15],
-        [label.topAnchor constraintEqualToAnchor:toastView.topAnchor constant:10],
-        [label.bottomAnchor constraintEqualToAnchor:toastView.bottomAnchor constant:-10],
-        [toastView.centerXAnchor constraintEqualToAnchor:window.centerXAnchor],
-        [toastView.bottomAnchor constraintEqualToAnchor:window.bottomAnchor constant:-100]
+        [label.leadingAnchor constraintEqualToAnchor:toast.leadingAnchor constant:16],
+        [label.trailingAnchor constraintEqualToAnchor:toast.trailingAnchor constant:-16],
+        [label.topAnchor constraintEqualToAnchor:toast.topAnchor constant:10],
+        [label.bottomAnchor constraintEqualToAnchor:toast.bottomAnchor constant:-10],
+        [toast.centerXAnchor constraintEqualToAnchor:window.centerXAnchor],
+        [toast.bottomAnchor constraintEqualToAnchor:window.bottomAnchor constant:-120]
     ]];
-    
-    toastView.alpha = 0;
+
+    toast.alpha = 0;
     [UIView animateWithDuration:0.3 animations:^{
-        toastView.alpha = 1;
+        toast.alpha = 1;
     } completion:^(BOOL finished) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+                       dispatch_get_main_queue(), ^{
             [UIView animateWithDuration:0.3 animations:^{
-                toastView.alpha = 0;
+                toast.alpha = 0;
             } completion:^(BOOL finished) {
-                [toastView removeFromSuperview];
+                [toast removeFromSuperview];
             }];
         });
     }];
 }
 
-@end
+#pragma mark تنبيه عربي (كان سبب خطأ البناء)
 
-// في أي مكان يوجد UIAlertController أو رسائل للمستخدم يجب التأكد أنها عربية:
-// مثال:
-UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"GPS++"
-                                                               message:@"يرجى استخدام إعدادات التطبيق لفتح GPS"
-                                                        preferredStyle:UIAlertControllerStyleAlert];
-[alert addAction:[UIAlertAction actionWithTitle:@"حسناً" style:UIAlertActionStyleDefault handler:nil]];
+- (void)showGPSDisabledAlert {
+    UIAlertController *alert =
+    [UIAlertController alertControllerWithTitle:@"GPS++"
+                                        message:@"يرجى تفعيل الموقع من إعدادات التطبيق"
+                                 preferredStyle:UIAlertControllerStyleAlert];
+
+    [alert addAction:
+     [UIAlertAction actionWithTitle:@"حسناً"
+                              style:UIAlertActionStyleDefault
+                            handler:nil]];
+
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    UIViewController *topVC =
+    [self topViewControllerWithRootViewController:window.rootViewController];
+
+    if (topVC) {
+        [topVC presentViewController:alert animated:YES completion:nil];
+    }
+}
+
+@end
