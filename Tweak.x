@@ -89,12 +89,12 @@ NSString *const kShowGPSSettingsNotification        = @"ShowGPSSettings";
 
     CLLocation *fakeLocation =
     [[CLLocation alloc] initWithCoordinate:current.coordinate
-                                   altitude:current.altitude
-                         horizontalAccuracy:current.accuracy ?: 5.0
-                           verticalAccuracy:current.accuracy ?: 5.0
-                                     course:current.course
-                                      speed:current.speed
-                                  timestamp:[NSDate date]];
+                               altitude:current.altitude
+                     horizontalAccuracy:current.horizontalAccuracy ?: 5.0
+                       verticalAccuracy:current.verticalAccuracy ?: 5.0
+                                 course:current.course
+                                  speed:current.speed
+                              timestamp:[NSDate date]];
 
     if (self.delegate &&
         [self.delegate respondsToSelector:@selector(locationManager:didUpdateLocations:)]) {
