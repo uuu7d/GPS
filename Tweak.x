@@ -10,7 +10,7 @@
 #import "GPSLocationViewModel.h"
 #import "GPSRouteManager.h"
 
-// تعريف مفاتيح الإعدادات
+// تعريف مفاتيحه الإعدادات
 #define kUserDefaultsDomain                @"com.gps.locationspoofer"
 #define kLocationSpoofingEnabledKey        @"LocationSpoofingEnabled"
 #define kAltitudeSpoofingEnabledKey        @"AltitudeSpoofingEnabled"
