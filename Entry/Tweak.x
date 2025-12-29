@@ -1,5 +1,5 @@
 #import <UIKit/UIKit.h>
-#import "GPSManager.h"
+#import "Core/GPSManager.h"
 
 %ctor {
     @autoreleasepool {
