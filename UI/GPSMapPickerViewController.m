@@ -1,9 +1,9 @@
 #import "Models/GPSLocationModel.h"
 #import <MapKit/MapKit.h>
 
-#import "GPSLocationModel.h"
-#import "GPSFavoritesStore.h"
-#import "GPSLocationSpoofer.h"
+#import "Models/GPSLocationModel.h"
+#import "Favorites/GPSFavoritesStore.h"
+#import "Core/GPSLocationSpoofer.h"
 
 @interface GPSMapPickerViewController () <MKMapViewDelegate>
 
