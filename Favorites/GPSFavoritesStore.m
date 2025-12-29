@@ -1,5 +1,5 @@
 #import "GPSFavoritesStore.h"
-#import "GPSLocationModel.h"
+#import "Models/GPSLocationModel.h"
 
 static NSString *const kGPSStoredLocation = @"gps.fake.location";
 
