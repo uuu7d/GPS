@@ -1,4 +1,4 @@
-#import "GPSMapPickerViewController.h"
+#import "Models/GPSLocationModel.h"
 #import <MapKit/MapKit.h>
 
 #import "GPSLocationModel.h"
